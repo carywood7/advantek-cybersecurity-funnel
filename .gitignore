@@ -1,0 +1,9 @@
+
+# Advantek local-only files
+backup-before-*/
+.DS_Store
+.env
+.env.*
+!.env.example
+node_modules/
+__pycache__/
