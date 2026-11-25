@@ -324,12 +324,15 @@
       const name = $("#full-name").value.trim();
       sessionStorage.setItem("advantek.previewLead.v4", JSON.stringify({
         firstName: name.split(/\s+/)[0].slice(0,60),
-        priority: $("#priority").value
+        priority: $("#priority").value,
+        audience: $("#role").selectedOptions[0]?.dataset.audience || ""
       }));
+      // A fresh request needs its own time selection and role-specific summary.
+      sessionStorage.removeItem("advantek.previewSlot.v4");
     } catch (_) { /* Session storage can be disabled; preview still works. */ }
     window.location.assign("schedule/?preview=1");
   });
-  // A use-case CTA carries only the selected priority into the form; no data is sent.
+  // Use-case and challenge links preselect a priority without submitting the form.
   $$("a[data-priority]").forEach((link) => link.addEventListener("click", () => {
     const priority = $("#priority");
     if (priority && [...priority.options].some(option => option.value === link.dataset.priority)) {

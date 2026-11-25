@@ -4,7 +4,7 @@
   const samples = [
     { question: "What should we review first?", finding: "Check exposure and asset ownership before prioritizing.", action: "Validate the affected systems." },
     { question: "Where are our access-review gaps?", finding: "The policy scope and review ownership need clarification.", action: "Confirm in-scope systems and review owners." },
-    { question: "How should we brief leadership?", finding: "Two overdue reviews need an accountable follow-up.", action: "Assign an owner and agree on a deadline." }
+    { question: "How should we brief leadership?", finding: "Exposure is concentrated in two systems with known exploits.", action: "Share a board-ready summary and a prioritized plan." }
   ];
   const button = document.getElementById("cycle-scenario");
   const question = document.getElementById("hero-sample-question");

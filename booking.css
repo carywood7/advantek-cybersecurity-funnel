@@ -38,7 +38,7 @@
 .booking-intro .eyebrow {margin-bottom:21px;}
 .booking-lede,.confirmation-lede { font:400 clamp(15px,1.2vw,18px)/1.75 var(--font-body);color:#50677a;max-width:660px;margin:0; }
 .booking-intro-stamp { position:relative;display:grid;place-items:center;width:151px;height:151px;border:1px solid #b9d9ec;border-radius:50%;background:#fff9;color:#5d93b5;box-shadow:0 0 0 13px #bfdfed30,0 0 0 28px #bfdfed14;transform:rotate(7deg); }
-.booking-intro-stamp span {font-size:10px;letter-spacing:.17em;font-weight:800;}
+.booking-intro-stamp span {max-width:120px;text-align:center;font-size:10px;letter-spacing:.17em;font-weight:800;}
 .booking-intro-stamp strong {font:800 54px/1 var(--font-head);letter-spacing:-.07em;color:var(--blue);}
 .booking-preview-alert { display:flex;align-items:flex-start;gap:15px;margin:0 0 31px;padding:16px 20px;border:1px solid #b9d8ec;border-left:4px solid #075c95;border-radius:9px;background:#eaf5fc;color:#365a74; }
 .booking-alert-icon { width:23px;height:23px;display:grid;place-items:center;flex:0 0 auto;background:var(--blue);color:white;border-radius:50%;font:900 13px/1 var(--font-body); }

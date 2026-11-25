@@ -1,4 +1,4 @@
-/* Advantek Cybersecurity AI — static preview scheduler and confirmation UI.
+/* Advantek AI² Security & Compliance — static preview scheduler and confirmation UI.
    IMPORTANT: no live availability, booking API, submission, or confirmation exists here. */
 (() => {
   'use strict';
@@ -7,6 +7,16 @@
   const leadStorageKey = 'advantek.previewLead.v4';
   const slotStorageKey = 'advantek.previewSlot.v4';
   const EASTERN = 'America/New_York';
+  const audiences = new Map([
+    ['finance', {
+      label: 'Finance leadership',
+      agenda: 'We can compare outside consulting spend, staff time, and the cost of an annual subscription.'
+    }],
+    ['it-security', {
+      label: 'IT/security leadership',
+      agenda: 'Bring a policy gap or threat advisory. We can walk through the cited findings your team would validate.'
+    }]
+  ]);
 
   function readSession(key) {
     try { const v = sessionStorage.getItem(key); return v ? JSON.parse(v) : null; }
@@ -110,8 +120,10 @@
     const oldPreview = readSession(slotStorageKey);
     timezoneSelect.value = safeTimeZone(oldPreview?.timeZone || detectedZone);
     const lead = readSession(leadStorageKey);
+    const audience = audiences.get(lead?.audience);
     if (lead?.priority && typeof lead.priority === 'string') {
-      $('#booking-context-copy').textContent = `Your selected focus: ${lead.priority}. We can discuss what your team would want to validate in a demo.`;
+      const agenda = audience?.agenda || 'We can discuss what your team would want to validate in a demo.';
+      $('#booking-context-copy').textContent = `Your selected focus: ${lead.priority}. ${agenda}`;
     }
 
     function validSlots(dayISO) {
@@ -206,7 +218,8 @@
       writeSession(slotStorageKey, {
         iso: selectedSlot.toISOString(), dateEastern: selectedDay,
         timeZone: timezoneSelect.value,
-        priority: typeof lead?.priority === 'string' ? lead.priority : ''
+        priority: typeof lead?.priority === 'string' ? lead.priority : '',
+        audience: audience ? lead.audience : ''
       });
       // Preview-only step, not a booking-confirmation callback.
       window.location.assign('../thank-you/?preview=1');
@@ -234,6 +247,12 @@
         $('#receipt-time').textContent = formatDate(date, tz, { weekday:'long', month:'long', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit', timeZoneName:'short' });
         $('#receipt-timezone').textContent = tz.replaceAll('_', ' ');
         if (data.priority) $('#receipt-priority').textContent = String(data.priority).slice(0,100);
+        const audience = audiences.get(data.audience);
+        if (audience) {
+          $('#receipt-audience').textContent = audience.label;
+          $('#receipt-audience-row').hidden = false;
+          $('#next-demo-agenda').textContent = audience.agenda;
+        }
       }
     } else {
       $('#confirmation-lede').textContent = 'This is the scheduling preview page. No sample time has been selected and no appointment has been booked. Return to the calendar to explore the complete experience.';
