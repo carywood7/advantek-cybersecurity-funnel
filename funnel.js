@@ -97,40 +97,91 @@
     distance = 0;
   });
 
-  // Any-hover mouse devices get an immediate preview; native click/touch and keyboard stay functional.
   const fineHover = matchMedia("(any-hover: hover)");
-  function hoverAccordions(selector) {
-    const items = $$(selector);
+
+  // Each buyer column, the challenges, and the FAQ have independent disclosure state.
+  for (const group of $$(".challenge-lines, .buyer-benefits, .faq-questions")) {
+    const items = $$("details", group);
+    let preview = null;
+    let pinned = null;
+    let closeTimer;
+
+    function dismissPreview() {
+      if (!preview) return;
+      preview.open = false;
+      preview.style.removeProperty("min-block-size");
+      preview = null;
+    }
+
+    function closeAfterLeave(item) {
+      if (item !== preview) return;
+      clearTimeout(closeTimer);
+      closeTimer = setTimeout(() => {
+        const focus = document.activeElement;
+        const readingWithKeyboard = item.contains(focus) && focus.matches(":focus-visible");
+        if (preview === item && !item.matches(":hover") && !readingWithKeyboard) {
+          dismissPreview();
+        }
+      }, 180);
+    }
+
     items.forEach((item) => {
-      let hoverOpened = false;
-      let closeTimeout;
+      const summary = $("summary", item);
+      let pointerType;
+      summary.addEventListener("pointerdown", (event) => { pointerType = event.pointerType; });
       item.addEventListener("pointerenter", (event) => {
-        if (event.pointerType !== "mouse" || !fineHover.matches) return;
-        clearTimeout(closeTimeout);
-        if (!item.open) { item.open = true; hoverOpened = true; }
-        items.forEach((other) => { if (other !== item) other.open = false; });
+        if (event.pointerType !== "mouse") return;
+        const focused = document.activeElement;
+        const focusedRow = focused?.closest("details");
+        // Never collapse an answer while a keyboard user is reading a link inside it.
+        if (focusedRow && focusedRow !== item && group.contains(focusedRow) &&
+            !focused.closest("summary") && focused.matches(":focus-visible")) return;
+
+        clearTimeout(closeTimer);
+        if (item === preview || (item === pinned && item.open)) return;
+        if (preview) preview.style.removeProperty("min-block-size");
+        pinned = null;
+        preview = item;
+        item.open = true;
+
+        // Closing a taller answer above can move the new row out from under the mouse.
+        // Keep the pointer inside the new answer until it leaves, even with wrapped text.
+        const bounds = item.getBoundingClientRect();
+        if (event.clientY >= bounds.bottom - 1) {
+          item.style.minBlockSize = Math.ceil(event.clientY - bounds.top + 4) + "px";
+        }
       });
       item.addEventListener("pointerleave", (event) => {
-        if (event.pointerType !== "mouse" || !hoverOpened) return;
-        closeTimeout = setTimeout(() => {
-          if (!item.matches(":hover") && !item.contains(document.activeElement)) {
-            item.open = false;
-            hoverOpened = false;
-          }
-        }, 240);
+        if (event.pointerType === "mouse") closeAfterLeave(item);
       });
-      item.querySelector("summary")?.addEventListener("click", (event) => {
-        if (!hoverOpened) return; // Touch / keyboard retains normal native details semantics.
-        event.preventDefault(); // Clicking after hover pins the open answer instead of closing it.
-        hoverOpened = false;
-        clearTimeout(closeTimeout);
-        item.open = true;
+      item.addEventListener("focusout", () => closeAfterLeave(item));
+      summary.addEventListener("click", (event) => {
+        clearTimeout(closeTimer);
+        if (event.detail > 0 && (event.pointerType || pointerType) === "mouse" && item === preview && item.open) {
+          event.preventDefault(); // The first mouse click pins its hover preview.
+          pinned = item;
+        } else {
+          pinned = item.open ? null : item; // Enter, Space, and tap use the native toggle.
+        }
+        preview = null;
       });
-      item.addEventListener("focusin", () => clearTimeout(closeTimeout));
+      item.addEventListener("toggle", () => {
+        if (!item.open) {
+          item.style.removeProperty("min-block-size");
+          if (preview === item) preview = null;
+          if (pinned === item) pinned = null;
+        } else if (!("name" in item)) {
+          // Older browsers do not implement named, mutually exclusive details.
+          items.forEach((other) => { if (other !== item && other.open) other.open = false; });
+        }
+      });
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape" || !preview) return;
+      if (preview.contains(document.activeElement)) $("summary", preview).focus({ preventScroll: true });
+      dismissPreview();
     });
   }
-  hoverAccordions(".challenge-lines details");
-  hoverAccordions(".faq-questions details");
 
   // Visibility-aware automatic visual changes: pause for hover, focus, hidden tabs,
   // and reduced-motion preference. Explicit pointer/touch clicks always keep working.
@@ -173,14 +224,6 @@
     select(0);
     schedule();
     return choose;
-  }
-
-  // One open accordion per section, including keyboard/touch toggles.
-  for (const selector of [".faq-questions details", ".challenge-lines details"]) {
-    const items = $$(selector);
-    items.forEach((item) => item.addEventListener("toggle", () => {
-      if (item.open) items.forEach((other) => { if (other !== item) other.open = false; });
-    }));
   }
 
   // Real product footage, never auto-enable sound. Autoplay is best-effort and nonessential.
